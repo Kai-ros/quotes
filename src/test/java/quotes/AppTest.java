@@ -3,12 +3,29 @@
  */
 package quotes;
 
+import com.sun.org.apache.xpath.internal.operations.Quo;
+import org.junit.Rule;
 import org.junit.Test;
+
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Scanner;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import static org.junit.Assert.*;
 
 public class AppTest {
 
-    String path = "./src/main/resources/testFile.json";
+    String trueURLPath = "https://ron-swanson-quotes.herokuapp.com/v2/quotes";
+    String falseURLPath = "";
+    String quotesFilePath = "./src/main/resources/recentquotes.json";
+    String testFile_ReadFromPath = "./src/main/resources/testFile_ReadFrom.json";
+    String testFile_WriteToPath = "./src/main/resources/testFile_WriteTo.json";
 
     @Test
     public void testReadFromFile()
@@ -16,8 +33,80 @@ public class AppTest {
         try
         {
             assertEquals("Method should return the targeted quote and author from the test file.",
-                    " “I am good, but not an angel. I do sin, but I am not the devil. I am just a small girl in a big world trying to find someone to love.” Marilyn Monroe",
-                    Quotes.readFromFile(path));
+                    "Quote from: Marilyn Monroe -  “I am good, but not an angel. I do sin, but I am not the devil. I am just a small girl in a big world trying to find someone to love.” ",
+                    Quotes.readFromFile(testFile_ReadFromPath));
+        } catch (Exception error)
+        {
+            fail();
+        }
+    }
+
+    @Test
+    public void testReadFromAPI()
+    {
+        Quotes testQuote = Quotes.readFromAPI(trueURLPath, quotesFilePath);
+
+        try
+        {
+            assertEquals("Method should pull in a quote from the Ron Swanson API.",
+                    "Ron Swanson",
+                    testQuote.author);
+        }
+        catch (Exception error)
+        {
+            fail();
+        }
+    }
+
+    @Test
+    public void testReadFromAPI_InternetProtocol()
+    {
+        try
+        {
+            URL url = new URL("https://ron-swanson-quotes.herokuapp.com/v2/quotes");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+
+            assertEquals("Method should establish a proper HttpURLConnection.",
+                    200,
+                    connection.getResponseCode());
+        }
+        catch (Exception error)
+        {
+            fail();
+        }
+    }
+
+    @Test
+    public void testReadFromAPI_NoInternet()
+    {
+        try
+        {
+            assertEquals("Method should return the targeted quote and author from the test file.",
+                    "Quote from: Ron Swanson - Quote from: Marilyn Monroe -  “I am good, but not an angel. I do sin, but I am not the devil. I am just a small girl in a big world trying to find someone to love.” ",
+                    Quotes.readFromAPI(falseURLPath, testFile_WriteToPath).toString());
+        } catch (Exception error)
+        {
+        }
+    }
+
+    @Test
+    public void testWriteToFile() throws Exception
+    {
+        Gson gson = new Gson();
+
+        BufferedReader fileRead1 = new BufferedReader(new FileReader(quotesFilePath));
+        Quotes[] testArray1 = gson.fromJson(fileRead1, Quotes[].class);
+
+        Quotes.readFromAPI(trueURLPath, quotesFilePath);
+
+        BufferedReader fileRead2 = new BufferedReader(new FileReader(quotesFilePath));
+        Quotes[] testArray2 = gson.fromJson(fileRead2, Quotes[].class);
+
+        try
+        {
+            assertTrue("Method should write the targeted quote and author to the test file.",
+                    testArray1.length < testArray2.length );
         } catch (Exception error)
         {
             fail();

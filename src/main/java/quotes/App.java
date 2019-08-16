@@ -7,11 +7,14 @@ public class App {
 
     public static void main(String[] args)
     {
-        String path = "./src/main/resources/recentquotes.json";
+        String trueFilePath = "./src/main/resources/recentquotes.json";
+        String trueURLPath = "https://ron-swanson-quotes.herokuapp.com/v2/quotes";
 
         try
         {
-            System.out.println(Quotes.readFromFile(path));
+//            System.out.println(Quotes.readFromFile(path));
+
+            System.out.println(Quotes.readFromAPI(trueURLPath, trueFilePath));
 
         }
         catch (Exception error)
